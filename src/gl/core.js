@@ -31,7 +31,7 @@ export function createGL(canvas) {
     // pointer in viewport css px (y down); s = smoothed; v = smoothed velocity (px/frame @60)
     mouse: { x: -1e4, y: -1e4, sx: -1e4, sy: -1e4, vx: 0, vy: 0, seen: false },
     scrollV: 0,
-    // slight turn of every plane towards the pointer, so the page never feels like a flat screen
+    // the camera turns a little with the pointer, so the page never feels like a flat screen
     tilt: { x: 0, y: 0 },
   };
 
@@ -43,8 +43,16 @@ export function createGL(canvas) {
     renderer.setPixelRatio(S.dpr);
     renderer.setSize(S.w, S.h, false);
     camera.aspect = S.w / S.h;
-    camera.position.set(0, 0, S.h / 2 / Math.tan(THREE.MathUtils.degToRad(FOV / 2)));
+    S.dist = S.h / 2 / Math.tan(THREE.MathUtils.degToRad(FOV / 2));
+    S.orbit();
     camera.updateProjectionMatrix();
+  };
+
+  // the camera orbits the centre of the screen; the content itself never rotates
+  S.orbit = () => {
+    const { x, y } = S.tilt;
+    camera.position.set(S.dist * Math.sin(y) * Math.cos(x), S.dist * Math.sin(x), S.dist * Math.cos(y) * Math.cos(x));
+    camera.lookAt(0, 0, 0);
   };
 
   // place an object (centered geometry, unit size) over a DOM rect
@@ -52,7 +60,6 @@ export function createGL(canvas) {
     obj.position.x = r.left + r.width / 2 - S.w / 2;
     obj.position.y = S.h / 2 - (r.top + r.height / 2);
     obj.scale.set(sx, sy, 1);
-    obj.rotation.set(S.tilt.x, S.tilt.y, 0);
   };
 
   S.visible = (r, margin = 0) => r.bottom > -margin && r.top < S.h + margin && r.right > -margin && r.left < S.w + margin;

@@ -1,7 +1,7 @@
 import './style.css';
 import Lenis from 'lenis';
 import { createGL, loadTexture, mipTexture } from './gl/core.js';
-import { Engraving, SlicedText, Digits, Tide } from './gl/sections.js';
+import { Engraving, SlicedText, Digits, HatchRow, Tide } from './gl/sections.js';
 import { ICONS } from './gl/icons.js';
 
 const $ = (s, c = document) => c.querySelector(s);
@@ -110,11 +110,12 @@ async function boot() {
       (el) => new Engraving(S, el, mipTexture(ICONS[+el.dataset.glRosette]()), { cut: true, order: 1, pitch: (r) => Math.max(3.4, r.height / 105) }),
     );
     S.emblems = emblems;
+    const rows = $$('[data-gl-row]').map((el) => new HatchRow(S, el));
     digits = new Digits(S, $('[data-gl-digits]'), ['01', '02', '03', '04']);
 
     about.scrub = true;
     contact.scrub = true;
-    parts.push(tide, hero, name, about, contact, digits, ...emblems);
+    parts.push(tide, hero, name, about, contact, digits, ...emblems, ...rows);
     S.parts = parts;
     S.about = about;
     S.contact = contact;
@@ -234,8 +235,9 @@ async function boot() {
       // the whole scene turns a few degrees towards the pointer
       const nx = S.touch || M.sx < 0 ? 0 : (M.sx / vw) * 2 - 1;
       const ny = S.touch || M.sy < 0 ? 0 : (M.sy / vh) * 2 - 1;
-      S.tilt.y = damp(S.tilt.y, nx * 0.075, 3, dt);
-      S.tilt.x = damp(S.tilt.x, ny * 0.055, 3, dt);
+      S.tilt.y = damp(S.tilt.y, nx * 0.06, 2.5, dt);
+      S.tilt.x = damp(S.tilt.x, -ny * 0.045, 2.5, dt);
+      S.orbit();
 
       // emblems are cut in, line by line, as each step comes into view
       for (const e of S.emblems) {
