@@ -46,7 +46,10 @@ export class Engraving {
       uCut: { value: opts.cut ? 1 : 0 },
       uFocusY: { value: opts.focusY ?? 0.5 },
       uTime: { value: 0 },
+      uOcc: { value: 0 },
+      uFadeB: { value: 0 },
       uInk: { value: INK },
+      uPaper: { value: PAPER },
     };
     this.mesh = new THREE.Mesh(PLANE, planeMat(ENGRAVE_FRAG, this.u));
     this.mesh.renderOrder = opts.order ?? 2;
@@ -89,7 +92,9 @@ export class SlicedText {
       uOut: { value: 0 },
       uSmear: { value: 0 },
       uTime: { value: 0 },
+      uKnock: { value: 0 },
       uInk: { value: opts.ink ?? INK },
+      uPaper: { value: PAPER },
     };
     this.mesh = new THREE.Mesh(PLANE, planeMat(SLICE_FRAG, this.u));
     this.mesh.renderOrder = opts.order ?? 1;

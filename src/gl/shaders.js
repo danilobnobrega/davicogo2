@@ -26,8 +26,8 @@ export const ENGRAVE_FRAG = /* glsl */ `
 uniform sampler2D uTex;
 uniform vec2 uSize;
 uniform vec2 uMouse;
-uniform float uPitch, uIntro, uOut, uReveal, uLens, uLensR, uImgAspect, uCut, uFocusY, uTime;
-uniform vec3 uInk;
+uniform float uPitch, uIntro, uOut, uReveal, uLens, uLensR, uImgAspect, uCut, uFocusY, uTime, uOcc, uFadeB;
+uniform vec3 uInk, uPaper;
 varying vec2 vUv;
 ${COMMON}
 vec2 coverUv(vec2 uv) {
@@ -63,6 +63,9 @@ void main() {
   // reveal: lines swell until they become the photograph
   float rr = eInOut(uReveal * 1.7 - ny * .7);
 
+  // optional fade at the foot: the lines thin out to nothing instead of ending at the edge
+  float foot = uFadeB > 0. ? smoothstep(0., uFadeB, vUv.y) : 1.;
+  drawn *= foot;
   float w = (dark * .86 + .14) * drawn * (1. - ot) + f * .1 * drawn;
   w = mix(w, 1., rr);
   float ink = lines(v, w);
@@ -73,6 +76,10 @@ void main() {
 
   vec3 col = mix(uInk, tx.rgb, smoothstep(.3, 1., rr));
   float a = ink * mix(1., tx.a, uCut);
+  // occlusion: inside the cutout the gaps between lines are paper, so type behind it is hidden
+  float occ = uOcc * tx.a * drawn * (1. - ot);
+  col = mix(uPaper, col, a / max(max(a, occ), 1e-4));
+  a = max(a, occ);
   if (a < .002) discard;
   gl_FragColor = vec4(col, a);
 }
@@ -83,8 +90,8 @@ export const SLICE_FRAG = /* glsl */ `
 uniform sampler2D uTex;
 uniform vec2 uSize;
 uniform vec2 uMouse;
-uniform float uPitch, uGap, uIntro, uOut, uSmear, uTime;
-uniform vec3 uInk;
+uniform float uPitch, uGap, uIntro, uOut, uSmear, uTime, uKnock;
+uniform vec3 uInk, uPaper;
 varying vec2 vUv;
 ${COMMON}
 void main() {
@@ -112,10 +119,13 @@ void main() {
   float fy = fract(v);
   float fw = fwidth(v);
   float gap = uGap * .5;
-  a *= smoothstep(gap - fw, gap + fw, fy) * smoothstep(gap - fw, gap + fw, 1. - fy);
+  float cut = smoothstep(gap - fw, gap + fw, fy) * smoothstep(gap - fw, gap + fw, 1. - fy);
   a *= sweep;
+  // knockout: the gaps between slices are filled with paper, so the type reads the same over the portrait
+  vec3 col = mix(uPaper, uInk, mix(1., cut, uKnock));
+  a *= mix(cut, 1., uKnock);
   if (a < .002) discard;
-  gl_FragColor = vec4(uInk, a);
+  gl_FragColor = vec4(col, a);
 }
 `;
 

@@ -88,7 +88,7 @@ async function boot() {
 
   const parts = [];
   let hero = null;
-  let name = null;
+  let names = [];
   let digits = null;
 
   if (ok) {
@@ -99,7 +99,8 @@ async function boot() {
       order: 2,
       pitch: (r) => Math.max(3.6, r.height / 150),
     });
-    name = new SlicedText(S, $('[data-gl-name]'), { slices: 14, gap: 0.12 });
+    // each name is its own plane: on a phone "Cogo" crosses in front of the portrait
+    names = $$('[data-gl-name] > span').map((el) => new SlicedText(S, el, { slices: 14, gap: 0.12 }));
     const about = new Engraving(S, $('[data-gl-photo]'), photo, {
       order: 1,
       focusY: 0.45,
@@ -117,7 +118,7 @@ async function boot() {
 
     about.scrub = true;
     contact.scrub = true;
-    parts.push(tide, hero, name, about, contact, digits, ...emblems, ...rows);
+    parts.push(tide, hero, ...names, about, contact, digits, ...emblems, ...rows);
     S.parts = parts;
     S.digits = digits;
     if (import.meta.env.DEV) window.__S = S;
@@ -133,7 +134,7 @@ async function boot() {
       lastW = window.innerWidth;
       clearTimeout(rt);
       rt = setTimeout(() => {
-        name.build();
+        names.forEach((n) => n.build());
         contact.build();
         digits.build();
       }, 150);
@@ -141,7 +142,15 @@ async function boot() {
   }
 
   $$('[data-reveal]').forEach((el) => {
-    if (el.closest('[data-hero]')) el.dataset.revealDelay = reduced ? 0 : 1.9;
+    // the opening is on screen from the start, so it reveals on the intro's clock, not on intersection
+    // (on a phone the info sits in the bottom band the observer ignores)
+    if (el.closest('[data-hero]')) {
+      const d = reduced ? 0 : 1.9;
+      el.style.setProperty('--d', `${d}s`);
+      el.classList.add('in');
+      setTimeout(() => el.classList.add('done'), (d + 1.8) * 1000);
+      return;
+    }
     io.observe(el);
   });
 
@@ -295,8 +304,16 @@ async function boot() {
       const out = clamp(-hr.top / (hr.height * 0.85));
       hero.u.uIntro.value = clamp(intro * 1.05 - 0.05);
       hero.u.uOut.value = out;
-      name.u.uIntro.value = clamp(intro * 1.5);
-      name.u.uOut.value = out;
+      // on a phone the cutout hides what passes behind it and fades out at its foot
+      hero.u.uOcc.value = mobile ? 1 : 0;
+      hero.u.uFadeB.value = mobile ? 0.16 : 0;
+      names.forEach((n, i) => {
+        n.u.uIntro.value = clamp(intro * 1.5 - i * 0.12);
+        n.u.uOut.value = out;
+        const front = mobile && i === 1;
+        n.mesh.renderOrder = front ? 3 : 1;
+        n.u.uKnock.value = front ? 1 : 0;
+      });
 
       /* about photo: lines get cut as it enters, then swell into the photograph */
       {
