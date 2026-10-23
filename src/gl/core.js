@@ -33,13 +33,15 @@ export function createGL(canvas) {
     scrollV: 0,
     // the camera turns a little with the pointer, so the page never feels like a flat screen
     tilt: { x: 0, y: 0 },
+    // lowered at runtime if the device can't hold the frame rate
+    maxDpr: 2,
   };
 
   S.resize = () => {
     S.w = window.innerWidth;
     S.h = window.innerHeight;
     S.mobile = matchMedia('(max-width: 820px)').matches;
-    S.dpr = Math.min(window.devicePixelRatio || 1, 2);
+    S.dpr = Math.min(window.devicePixelRatio || 1, S.maxDpr);
     renderer.setPixelRatio(S.dpr);
     renderer.setSize(S.w, S.h, false);
     camera.aspect = S.w / S.h;

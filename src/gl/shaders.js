@@ -83,8 +83,8 @@ export const SLICE_FRAG = /* glsl */ `
 uniform sampler2D uTex;
 uniform vec2 uSize;
 uniform vec2 uMouse;
-uniform float uPitch, uGap, uIntro, uOut, uSmear, uTime;
-uniform vec3 uInk;
+uniform float uPitch, uGap, uIntro, uOut, uSmear, uTime, uKnock;
+uniform vec3 uInk, uPaper;
 varying vec2 vUv;
 ${COMMON}
 void main() {
@@ -112,10 +112,13 @@ void main() {
   float fy = fract(v);
   float fw = fwidth(v);
   float gap = uGap * .5;
-  a *= smoothstep(gap - fw, gap + fw, fy) * smoothstep(gap - fw, gap + fw, 1. - fy);
+  float cut = smoothstep(gap - fw, gap + fw, fy) * smoothstep(gap - fw, gap + fw, 1. - fy);
   a *= sweep;
+  // knockout: the gaps between slices are filled with paper, so the type reads the same over the portrait
+  vec3 col = mix(uPaper, uInk, mix(1., cut, uKnock));
+  a *= mix(cut, 1., uKnock);
   if (a < .002) discard;
-  gl_FragColor = vec4(uInk, a);
+  gl_FragColor = vec4(col, a);
 }
 `;
 

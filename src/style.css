@@ -223,6 +223,8 @@ main, .foot { position: relative; z-index: 1; }
   word-spacing: 0.8em;
   white-space: nowrap;
 }
+/* each name is drawn on its own plane, so each needs a box of its own */
+.hero__name span { display: inline-block; }
 .hero__portrait {
   position: absolute;
   left: 50%;
@@ -453,31 +455,38 @@ main, .foot { position: relative; z-index: 1; }
   .menu__list a { gap: 14px; padding: 1.6svh 0; font-size: clamp(34px, 10.5vw, 60px); }
   .menu__list a:hover { transform: none; }
 
-  /* hero: the name sits above the head in two lines, the portrait takes the room left below */
+  /* hero: the portrait leans to the right; "Davi" stands beside the head,
+     "Cogo" crosses in front of the chest. every measure comes from the portrait size */
   .hero {
-    --nt: max(80px, 11svh);
-    --nf: min(36vw, 21svh);
-    --it: calc(var(--nt) + var(--nf) * 0.84 * 2 + 10px);
+    --H: max(560px, 100svh);
+    /* measured on the cutout: the head spans 34%–67% of its width, 5%–52% of its height;
+       "Davi" is 1.44em wide. the name gets every pixel left of the head, less a 14px gap */
+    --P: min(125vw, 62svh);
+    --x0: calc(100vw - 12px - var(--P) * 0.665);
+    --nf: min((100vw - 46px - var(--P) * 0.322) / 1.44, 24svh);
+    --dt: calc(var(--H) - var(--P) * 0.69 - var(--nf) * 0.62);
     min-height: 560px;
   }
+  .hero__portrait { left: var(--x0); width: var(--P); transform: none; }
   .hero__name {
-    left: var(--pad);
-    top: var(--nt);
+    inset: 0;
     transform: none;
     font-size: var(--nf);
     line-height: 0.84;
     word-spacing: 0;
   }
-  .hero__name span { display: block; }
-  .hero__portrait { width: min(112vw, (max(560px, 100svh) - var(--it) - 50px) * 1.05); }
+  .hero__name span { position: absolute; }
+  .hero__name span:first-child { left: var(--pad); top: var(--dt); }
+  .hero__name span:last-child { right: var(--pad); top: calc(var(--H) - var(--P) * 0.45 + var(--nf) * 0.07); }
   .hero__info {
-    left: auto;
-    right: var(--pad);
+    left: var(--pad);
     bottom: auto;
-    top: var(--it);
-    text-align: right;
+    /* sits right above "Davi", so the whole opening reads as one block */
+    top: max(84px, var(--dt) - 84px);
     font-size: 0.86rem;
   }
+  .hero__sep { display: none; }
+  .hero__city { display: block; }
 
   .about { display: block; padding: 14svh var(--pad) 12svh; }
   .about__text { margin-top: 7svh; }
