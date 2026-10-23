@@ -210,7 +210,8 @@ export class HatchRow {
     this.on = false;
 
     if (!S.touch) {
-      el.addEventListener('mouseenter', (e) => this.enter(e.clientX, e.clientY));
+      // only a real mouse move lights a row: rows scrolling under a still cursor stay quiet
+      el.addEventListener('mousemove', (e) => { if (!this.on && (e.movementX || e.movementY)) this.enter(e.clientX, e.clientY); });
       el.addEventListener('mouseleave', (e) => this.leave(e.clientX, e.clientY));
     }
   }
