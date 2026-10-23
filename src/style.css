@@ -219,6 +219,8 @@ main, .foot { position: relative; z-index: 1; }
   font-size: 21.5vw;
   line-height: 0.86;
   letter-spacing: -0.035em;
+  /* the two names stand either side of the head instead of running behind it */
+  word-spacing: 0.8em;
   white-space: nowrap;
 }
 .hero__portrait {
@@ -438,6 +440,114 @@ main, .foot { position: relative; z-index: 1; }
 .foot__line { margin-top: 4vh; display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--ink-2); }
 
 /* ── mobile ── */
+@media (max-width: 820px) {
+  :root { --pad: 20px; }
+  body { font-size: 16px; }
+
+  .hdr { padding: 14px var(--pad); padding-top: max(14px, env(safe-area-inset-top)); }
+  .hdr__brand { font-size: 1.4rem; }
+  .hdr__nav { gap: 18px; }
+  .btn--sm { height: 38px; padding: 0 16px; }
+
+  .menu { padding-top: 96px; }
+  .menu__list a { gap: 14px; padding: 1.6svh 0; font-size: clamp(34px, 10.5vw, 60px); }
+  .menu__list a:hover { transform: none; }
+
+  /* hero: the name sits above the head in two lines, the portrait takes the room left below */
+  .hero {
+    --nt: max(80px, 11svh);
+    --nf: min(36vw, 21svh);
+    --it: calc(var(--nt) + var(--nf) * 0.84 * 2 + 10px);
+    min-height: 560px;
+  }
+  .hero__name {
+    left: var(--pad);
+    top: var(--nt);
+    transform: none;
+    font-size: var(--nf);
+    line-height: 0.84;
+    word-spacing: 0;
+  }
+  .hero__name span { display: block; }
+  .hero__portrait { width: min(112vw, (max(560px, 100svh) - var(--it) - 50px) * 1.05); }
+  .hero__info {
+    left: auto;
+    right: var(--pad);
+    bottom: auto;
+    top: var(--it);
+    text-align: right;
+    font-size: 0.86rem;
+  }
+
+  .about { display: block; padding: 14svh var(--pad) 12svh; }
+  .about__text { margin-top: 7svh; }
+  .about__lead { margin-top: 18px; font-size: clamp(30px, 8.6vw, 46px); line-height: 1.06; }
+  .about__body { margin-top: 22px; font-size: 1rem; }
+  .facts { margin-top: 34px; grid-template-columns: 1fr; }
+  .facts div {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .facts dd { margin-top: 0; text-align: right; }
+
+  /* journey keeps its sideways travel, one milestone per screen */
+  .journey { height: 400svh; }
+  .journey__sticky { height: 100svh; }
+  .journey__head { padding: max(86px, 12svh) var(--pad) 0; gap: 16px; }
+  .journey__track { align-items: stretch; }
+  .mile {
+    width: 100vw;
+    grid-template-columns: 1fr;
+    align-content: center;
+    gap: 3.4svh;
+  }
+  .mile__rosette { width: min(62vw, 33svh); }
+  .mile__year { font-size: min(24vw, 13svh); }
+  .mile__title { margin-top: 1.6svh; font-size: clamp(26px, 7.6vw, 40px); }
+  .mile__desc { margin-top: 12px; font-size: 0.95rem; }
+
+  .help { padding: 14svh var(--pad) 10svh; }
+  .rows { margin-top: 4svh; }
+  .row {
+    grid-template-columns: 3.2ch 1fr;
+    row-gap: 10px;
+    align-items: baseline;
+    padding: 30px 8px;
+  }
+  .row__title { font-size: clamp(38px, 12vw, 64px); }
+  .row.is-on .row__title { transform: translateX(8px); }
+  .row__desc { grid-column: 2; justify-self: start; font-size: 0.95rem; }
+
+  /* how: the numeral stays pinned at the top while the steps pass beneath it */
+  .how { display: block; padding: 12svh var(--pad) 4svh; }
+  /* the aside itself pins, so it stays up for the whole list of steps */
+  .how__aside { position: sticky; top: 64px; z-index: 1; }
+  .how__sticky { position: static; padding-bottom: 2svh; }
+  .how__num { margin-top: 2svh; height: 19svh; font-size: 19svh; }
+  .how__progress { margin-top: 2svh; width: 100%; }
+  .how__steps { margin-top: 2svh; }
+  .step { min-height: 58svh; justify-content: flex-start; padding-top: 10svh; }
+  .step__title { font-size: clamp(32px, 9.4vw, 48px); }
+  .step__text { margin-top: 14px; font-size: 1rem; }
+
+  .frame { padding: 18svh var(--pad) 16svh; margin: 34svh 0 22svh; }
+  .frame__lead { margin-top: 22px; font-size: clamp(32px, 9.4vw, 52px); line-height: 1.05; }
+  .frame__cols { margin-top: 8svh; grid-template-columns: 1fr; gap: 36px; }
+
+  .contact { min-height: 88svh; padding: 14svh var(--pad); }
+  .contact__title { font-size: 21vw; line-height: 0.92; }
+  .contact__sub { margin-top: 5svh; font-size: 1rem; }
+  .contact__actions { margin-top: 4svh; flex-direction: column; gap: 18px; }
+  .contact__actions .btn { width: 100%; max-width: 340px; }
+
+  .foot { padding-bottom: max(20px, env(safe-area-inset-bottom)); }
+  .foot__line { flex-wrap: wrap; gap: 8px 20px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   [data-reveal] { transition: none; -webkit-mask-image: none; mask-image: none; }
 }

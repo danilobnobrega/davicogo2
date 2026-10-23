@@ -179,7 +179,7 @@ export class Digits {
     S.place(this.mesh, r);
     u.uSize.value.set(r.width, r.height);
     u.uPitch.value = this.fs / 15;
-    this.p = Math.min(1, this.p + S.dt / 1.1);
+    this.p = Math.min(1, this.p + S.dt / 1.3);
     u.uP.value = this.p;
   }
 }

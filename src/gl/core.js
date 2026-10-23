@@ -111,6 +111,8 @@ export function drawText(el, dpr, cells = null, padXk = 0.12) {
   const left = cs.textAlign === 'left' || cs.textAlign === 'start';
   ctx.textAlign = left ? 'left' : 'center';
 
+  const ws = parseFloat(cs.wordSpacing) || 0;
+
   const m = ctx.measureText('Hg');
   const asc = m.fontBoundingBoxAscent ?? fs * 0.9;
   const desc = m.fontBoundingBoxDescent ?? fs * 0.25;
@@ -120,7 +122,15 @@ export function drawText(el, dpr, cells = null, padXk = 0.12) {
   groups.forEach((lines, gi) => {
     lines.forEach((line, i) => {
       const base = padY + i * lh + (lh - (asc + desc)) / 2 + asc;
-      ctx.fillText(line, gi * cellW + (left ? padX : W / 2), base);
+      const x0 = gi * cellW + (left ? padX : W / 2);
+      // canvas has no portable word-spacing, so wide gaps are laid out word by word
+      if (ws && left) {
+        let x = x0;
+        line.split(' ').forEach((word) => {
+          ctx.fillText(word, x, base);
+          x += ctx.measureText(word + ' ').width + ws;
+        });
+      } else ctx.fillText(line, x0, base);
     });
   });
   return { canvas: c, padX, padY, fs };

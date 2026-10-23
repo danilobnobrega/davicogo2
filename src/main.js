@@ -117,12 +117,18 @@ async function boot() {
     contact.scrub = true;
     parts.push(tide, hero, name, about, contact, digits, ...emblems, ...rows);
     S.parts = parts;
+    S.digits = digits;
+    if (import.meta.env.DEV) window.__S = S;
     S.about = about;
     S.contact = contact;
 
     let rt;
+    let lastW = window.innerWidth;
     window.addEventListener('resize', () => {
       S.resize();
+      // phones resize on every address-bar move; type is sized by width, so only redraw it when that changes
+      if (S.touch && window.innerWidth === lastW) return;
+      lastW = window.innerWidth;
       clearTimeout(rt);
       rt = setTimeout(() => {
         name.build();
@@ -155,6 +161,7 @@ async function boot() {
   const how = $('[data-how]');
   const hbar = $('[data-how-bar]');
   const steps = $$('[data-step]');
+  const howSticky = $('.how__sticky');
   const frame = $('[data-gl-tide]');
   const heroEl = $('[data-hero]');
 
@@ -171,7 +178,7 @@ async function boot() {
     const mobile = vw <= 820;
 
     /* journey: vertical scroll drives the horizontal track */
-    if (!mobile) {
+    {
       const r = journey.getBoundingClientRect();
       const p = clamp(-r.top / (r.height - vh));
       const dist = track.scrollWidth - vw;
@@ -184,10 +191,26 @@ async function boot() {
       const r = how.getBoundingClientRect();
       hbar.style.transform = `scaleX(${clamp((vh * 0.5 - r.top) / r.height)})`;
       let cur = 0;
-      steps.forEach((s, i) => {
-        if (s.getBoundingClientRect().top < vh * 0.55) cur = i;
-      });
+      const edge = howSticky.getBoundingClientRect().bottom;
+      if (mobile) {
+        // the numeral follows the step that is in view below it
+        cur = steps.length - 1;
+        for (let i = steps.length - 1; i >= 0; i--) {
+          if (steps[i].querySelector('.step__title').getBoundingClientRect().top > edge + vh * 0.04) cur = i;
+        }
+      } else {
+        steps.forEach((s, i) => {
+          if (s.getBoundingClientRect().top < vh * 0.55) cur = i;
+        });
+      }
       if (digits && r.top < vh * 0.8) digits.set(cur);
+      // on a phone the numeral is pinned above the steps: a step fades as it slides under it
+      if (mobile) {
+        steps.forEach((s) => {
+          const t = s.querySelector('.step__title').getBoundingClientRect().top;
+          s.style.opacity = clamp((t - edge) / (vh * 0.16)).toFixed(3);
+        });
+      } else if (steps[0].style.opacity) steps.forEach((s) => (s.style.opacity = ''));
     }
 
     /* header over the navy section */
@@ -204,7 +227,7 @@ async function boot() {
     }
 
     /* magnets */
-    magnets.forEach((m) => {
+    if (!S?.touch) magnets.forEach((m) => {
       const r = m.el.getBoundingClientRect();
       const cx = r.left + r.width / 2;
       const cy = r.top + r.height / 2;
@@ -239,11 +262,15 @@ async function boot() {
       S.tilt.x = damp(S.tilt.x, -ny * 0.045, 2.5, dt);
       S.orbit();
 
-      // emblems are cut in, line by line, as each step comes into view
+      // emblems are cut in, line by line, as each step comes into view.
+      // the first one is already on screen when the track pins, so it is cut
+      // while the section rises and through the first stretch of the pin
+      const jt = journey.getBoundingClientRect().top;
+      const rise = clamp((vh * 0.62 - jt) / (vh * 0.95));
       for (const e of S.emblems) {
         const r = e.el.getBoundingClientRect();
-        const k = mobile ? (vh * 1.0 - (r.top + r.height / 2)) / (vh * 0.55) : (vw * 1.02 - (r.left + r.width / 2)) / (vw * 0.55);
-        e.u.uIntro.value = Math.min(1, Math.max(0, k));
+        const k = (vw * 1.02 - (r.left + r.width / 2)) / (vw * 0.55);
+        e.u.uIntro.value = Math.min(rise, clamp(k));
       }
 
       const intro = clamp((now - t0) / 1000 / INTRO);

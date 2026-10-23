@@ -119,7 +119,8 @@ void main() {
 }
 `;
 
-// numerals in an atlas; on change, slices hand over from the old numeral to the new one
+// numerals in an atlas; on change every slice turns like a louver: the new numeral
+// rises inside each slice and pushes the old one out through the top, row by row
 export const DIGIT_FRAG = /* glsl */ `
 uniform sampler2D uTex;
 uniform vec2 uSize;
@@ -127,26 +128,25 @@ uniform float uPitch, uGap, uFrom, uTo, uP, uCells;
 uniform vec3 uInk;
 varying vec2 vUv;
 ${COMMON}
-float cell(float i, float x) {
-  if (i < 0. || x < 0. || x > uSize.x) return 0.;
-  return texture(uTex, vec2((i + x / uSize.x) / uCells, vUv.y)).a;
+float cell(float i, vec2 p) {
+  if (i < 0. || p.x < 0. || p.x > uSize.x) return 0.;
+  return texture(uTex, vec2((i + p.x / uSize.x) / uCells, 1. - p.y / uSize.y)).a;
 }
 void main() {
   vec2 p = vec2(vUv.x, 1. - vUv.y) * uSize;
   float v = p.y / uPitch;
   float row = floor(v);
   float ny = row * uPitch / uSize.y;
-  float dir = mod(row, 2.) < 1. ? -1. : 1.;
-  float h = hash11(row + 7.);
-  float dist = uSize.x * 1.05;
-  float outP = eInOut(clamp(uP * 2., 0., 1.) * 1.4 - ny * .25 - h * .15);
-  float inP = eInOut(clamp(uP * 2. - 1., 0., 1.) * 1.4 - ny * .25 - h * .15);
-  float a = uP < .5
-    ? cell(uFrom, p.x - dir * outP * dist)
-    : cell(uTo, p.x + dir * (1. - inP) * dist);
   float fy = fract(v);
   float fw = fwidth(v);
   float gap = uGap * .5;
+  // top rows turn first, in one clean cascade
+  float pr = smoothstep(0., 1., uP * 1.6 - ny * .6);
+  // the split runs a little past both edges so nothing of the other numeral lingers
+  float split = mix(1. + gap + fw, -gap - fw, pr);
+  float a = fy < split
+    ? cell(uFrom, p + vec2(0., max(0., 1. - gap - split) * uPitch))
+    : cell(uTo, p - vec2(0., max(0., split - gap) * uPitch));
   a *= smoothstep(gap - fw, gap + fw, fy) * smoothstep(gap - fw, gap + fw, 1. - fy);
   if (a < .002) discard;
   gl_FragColor = vec4(uInk, a);
